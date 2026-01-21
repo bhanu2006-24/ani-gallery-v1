@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
+const sizeOf = require('image-size');
 
 const IMGS_DIR = path.join(__dirname, 'imgs');
 const MUSIC_DIR = path.join(__dirname, 'music');
 const OUTPUT_FILE = path.join(__dirname, 'index.html');
-const API_FILE = path.join(__dirname, 'api.json'); // Renamed for clarity
+const API_FILE = path.join(__dirname, 'api.json'); 
 
 // --- Configuration ---
-// Change this url to your actual GitHub Pages URL
 const HOSTED_URL = 'https://bhanu2006-24.github.io/ani-gallery-v1';
 
 console.log('Generating static gallery with Tailwind...');
@@ -17,19 +17,43 @@ if (!fs.existsSync(IMGS_DIR)) {
     process.exit(1);
 }
 
+// Helper: Calculate Aspect Ratio
+function getAspectRatio(w, h) {
+    const r = w / h;
+    if (Math.abs(r - 1) < 0.05) return '1:1';
+    if (Math.abs(r - 16/9) < 0.1) return '16:9';
+    if (Math.abs(r - 9/16) < 0.1) return '9:16';
+    if (Math.abs(r - 4/3) < 0.1) return '4:3';
+    if (Math.abs(r - 3/4) < 0.1) return '3:4';
+    if (Math.abs(r - 21/9) < 0.1) return '21:9';
+    return r > 1 ? 'landscape' : 'portrait';
+}
+
 // 1. Scan Images
 console.log('Scanning images...');
 const imgFiles = fs.readdirSync(IMGS_DIR).filter(file => !file.startsWith('.'));
 const imageData = imgFiles.map(file => {
     try {
-        const stats = fs.statSync(path.join(IMGS_DIR, file));
+        const filePath = path.join(IMGS_DIR, file);
+        const stats = fs.statSync(filePath);
+        const dims = sizeOf(filePath);
+        const orientation = dims.width >= dims.height ? 'landscape' : 'portrait';
+        const ratio = getAspectRatio(dims.width, dims.height);
+
         return {
             name: file,
             path: `imgs/${file}`,
             size: stats.size,
+            width: dims.width,
+            height: dims.height,
+            aspect_ratio: ratio,
+            orientation: orientation,
             date: stats.mtime
         };
-    } catch (e) { return null; }
+    } catch (e) { 
+        console.warn(`Skipping ${file}: ${e.message}`);
+        return null; 
+    }
 }).filter(Boolean);
 
 // 2. Scan Music
@@ -59,6 +83,10 @@ const apiPayload = {
     images: imageData.map(img => ({
         name: img.name,
         url: `${HOSTED_URL}/${img.path}`,
+        width: img.width,
+        height: img.height,
+        aspect_ratio: img.aspect_ratio,
+        orientation: img.orientation,
         size: img.size
     })),
     music: musicData.map(track => ({
@@ -129,8 +157,8 @@ const htmlContent = `
                         </div>
                         <div class="h-3 w-px bg-slate-700/80"></div>
                         <div class="flex items-center gap-1.5">
-                             <span class="text-emerald-400 font-bold drop-shadow-sm">${musicData.length}</span>
-                             <span class="text-slate-400">Tracks</span>
+                            <span class="text-emerald-400 font-bold drop-shadow-sm">${musicData.length}</span>
+                            <span class="text-slate-400">Tracks</span>
                         </div>
                     </div>
                 </div>
@@ -167,10 +195,13 @@ const htmlContent = `
                         <input type="text" id="searchInput" placeholder="Search filename..." class="w-full bg-dark border border-slate-700 text-sm rounded-lg focus:border-primary focus:ring-1 focus:ring-primary pl-9 p-2.5 text-slate-200 outline-none transition-all placeholder:text-slate-500">
                     </div>
                     <select id="sortSelect" onchange="renderGallery()" class="w-full md:w-48 bg-dark border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary p-2.5 outline-none">
+                        <option value="random">Shuffle (Random)</option>
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="sizeDesc">Size (High to Low)</option>
                         <option value="name">Name (A-Z)</option>
+                        <option value="portrait">Portrait Only</option>
+                        <option value="landscape">Landscape Only</option>
                     </select>
                 </div>
                 <div class="text-xs md:text-sm text-slate-400 font-mono w-full md:w-auto text-right">
@@ -255,6 +286,10 @@ const htmlContent = `
     {
        "name": "img_001.jpg",
        "url": ".../imgs/img_001.jpg",
+       "width": 1080,
+       "height": 1920,
+       "aspect_ratio": "9:16",
+       "orientation": "portrait",
        "size": 240050
     }
   ],
@@ -263,6 +298,26 @@ const htmlContent = `
 </pre>
                         </div>
                     </div>
+
+                    <!-- JS Example: Random Image -->
+                     <div class="bg-card border border-slate-700 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                             <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded border border-primary/20">CODE</span>
+                             <span class="text-sm font-semibold text-slate-200">Get Random Image (JS)</span>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-3">How to fetch a random image using the static API.</p>
+                        <div class="bg-dark rounded p-3 overflow-x-auto">
+<pre class="text-[10px] md:text-xs text-slate-300 font-mono">
+fetch('${HOSTED_URL}/api.json')
+  .then(res => res.json())
+  .then(data => {
+      const randomImg = data.images[Math.floor(Math.random() * data.images.length)];
+      console.log(randomImg.url, randomImg.aspect_ratio);
+  });
+</pre>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -338,20 +393,29 @@ const htmlContent = `
             const sort = document.getElementById('sortSelect').value;
             const noRes = document.getElementById('no-results');
 
-            let filtered = IMAGES;
+            let filtered = [...IMAGES];
             if (filter) {
                 const term = filter.toLowerCase();
                 filtered = IMAGES.filter(img => img.name.toLowerCase().includes(term));
             }
 
+            // Filter by Orientation if selected
+            if (sort === 'portrait' || sort === 'landscape') {
+                filtered = filtered.filter(img => img.orientation === sort);
+            }
+
             // Sort
-            filtered.sort((a, b) => {
-                if (sort === 'newest') return new Date(b.date) - new Date(a.date);
-                if (sort === 'oldest') return new Date(a.date) - new Date(b.date);
-                if (sort === 'sizeDesc') return b.size - a.size;
-                if (sort === 'name') return a.name.localeCompare(b.name);
-                return 0;
-            });
+            if (sort === 'random') {
+                 filtered.sort(() => Math.random() - 0.5);
+            } else {
+                filtered.sort((a, b) => {
+                    if (sort === 'newest') return new Date(b.date) - new Date(a.date);
+                    if (sort === 'oldest') return new Date(a.date) - new Date(b.date);
+                    if (sort === 'sizeDesc') return b.size - a.size;
+                    if (sort === 'name') return a.name.localeCompare(b.name);
+                    return 0; // Default or random/orientation handled
+                });
+            }
 
             if (filtered.length === 0) {
                 grid.innerHTML = '';
@@ -364,8 +428,13 @@ const htmlContent = `
                 <div class="group relative aspect-[2/3] bg-card rounded-lg overflow-hidden border border-slate-700/50 cursor-pointer transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10" onclick="window.open('\${img.path}', '_blank')">
                     <img src="\${img.path}" loading="lazy" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" alt="\${img.name}">
                     <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 md:p-3">
-                        <p class="text-[10px] md:text-xs font-mono text-white truncate">\${img.name}</p>
-                        <p class="text-[9px] md:text-[10px] text-slate-400">\${(img.size/1024).toFixed(0)} KB</p>
+                         <div class="flex justify-between items-end">
+                            <div class="min-w-0">
+                                <p class="text-[10px] md:text-xs font-mono text-white truncate">\${img.name}</p>
+                                <p class="text-[9px] md:text-[10px] text-slate-400">\${(img.size/1024).toFixed(0)} KB</p>
+                            </div>
+                            <span class="text-[9px] text-slate-300 bg-slate-700/80 px-1.5 py-0.5 rounded font-mono border border-slate-600">\${img.aspect_ratio || '?'}</span>
+                        </div>
                     </div>
                 </div>
             \`).join('');
@@ -393,5 +462,5 @@ const htmlContent = `
 `;
 
 fs.writeFileSync(OUTPUT_FILE, htmlContent);
-console.log('Successfully generated index.html with Premium UI & Music support.');
+console.log('Successfully generated index.html with Premium UI, Music & Enhanced Metadata.');
 

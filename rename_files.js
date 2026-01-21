@@ -22,15 +22,20 @@ fs.readdir(DIRECTORY, (err, files) => {
     // Here we sort alphabetical, but you could sort by fs.statSync(file).birthtime
     validFiles.sort();
 
-    console.log(`Renaming ${validFiles.length} files in ${DIRECTORY}...`);
+    const totalFiles = validFiles.length;
+    // Calculate padding dynamically based on total files, defaulting to at least 4 digits
+    // to support >999 files while maintaining sorting order (e.g., 0001, 0002... 1000)
+    const paddingLength = Math.max(4, String(totalFiles).length);
+
+    console.log(`Renaming ${totalFiles} files in ${DIRECTORY} with ${paddingLength}-digit padding...`);
 
     let count = 1;
     validFiles.forEach(file => {
         const ext = path.extname(file);
         const oldPath = path.join(DIRECTORY, file);
         
-        // Pad number with zeros: img_001.jpg
-        const newName = `${PREFIX}${String(count).padStart(3, '0')}${ext}`;
+        // Pad number with zeros based on dynamic length
+        const newName = `${PREFIX}${String(count).padStart(paddingLength, '0')}${ext}`;
         const newPath = path.join(DIRECTORY, newName);
 
         // Check if file already exists to avoid overwriting
