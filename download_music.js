@@ -7,6 +7,7 @@ const videoUrls = [
     'https://youtu.be/XxliAKtHPTc?si=ZArYt8qZbeU84meG',
     'https://youtu.be/K4DyBUG242c?si=n3vzZ_K2DsBY6HSg',
     'https://youtu.be/3nQNiWdeH2Q?si=qNY2JvKvA9Db75Rz',
+    'https://youtu.be/LHvYrn3FAgI?si=BPbccb3jpA8g5J9k',
     // Add more URLs here as needed
 ];
 
