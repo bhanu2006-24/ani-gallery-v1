@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const ytdl = require('@distube/ytdl-core');
+
 
 // List of URLs to download
 const videoUrls = [
@@ -38,37 +38,46 @@ function cleanupTrash() {
     });
 }
 
+const youtubedl = require('youtube-dl-exec');
+
+// ... (previous code)
+
 async function downloadSingleVideo(url) {
-    if (!ytdl.validateURL(url)) {
+    if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
         console.error(`Invalid URL: ${url}`);
         return;
     }
 
     try {
-        console.log(`Fetching info for: ${url}`);
-        const info = await ytdl.getInfo(url);
-        const title = info.videoDetails.title.replace(/[^a-zA-Z0-9]/g, '_'); 
+        console.log(`Processing: ${url}`);
+        
+        // Get Info first to get title
+        const info = await youtubedl(url, {
+             dumpSingleJson: true,
+             noWarnings: true,
+             noCheckCertificate: true,
+        });
+
+        const title = info.title.replace(/[^a-zA-Z0-9]/g, '_'); 
         const outputPath = path.join(outputDir, `${title}.mp3`);
 
         if (fs.existsSync(outputPath)) {
-            console.log(`  - File exists, skipping: ${title}`);
+            console.log(`  - File exists, skipping: ${info.title}`);
             return;
         }
 
-        console.log(`  > Downloading: ${info.videoDetails.title}`);
+        console.log(`  > Downloading: ${info.title}`);
 
-        return new Promise((resolve, reject) => {
-            ytdl(url, { quality: 'highestaudio', filter: 'audioonly' })
-                .pipe(fs.createWriteStream(outputPath))
-                .on('finish', () => {
-                    console.log(`  ✓ Saved to: ${outputPath}`);
-                    resolve();
-                })
-                .on('error', (err) => {
-                    console.error(`  ✗ Error downloading ${title}:`, err.message);
-                    resolve(); // Resolve anyway to continue queue
-                });
+        // Download
+        await youtubedl(url, {
+            extractAudio: true,
+            audioFormat: 'mp3',
+            output: outputPath,
+            noCheckCertificate: true,
+            // Add other options as needed
         });
+
+        console.log(`  ✓ Saved to: ${outputPath}`);
 
     } catch (error) {
         console.error(`  ✗ Error processing ${url}:`, error.message);
