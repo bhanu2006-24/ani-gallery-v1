@@ -79,7 +79,7 @@ const htmlContent = `
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AniGallery & API</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -103,28 +103,48 @@ const htmlContent = `
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Outfit', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-dark text-slate-200 min-h-screen flex flex-col">
+<body class="bg-dark text-slate-200 min-h-screen flex flex-col pb-safe">
 
-    <!-- Navbar -->
-    <nav class="sticky top-0 z-50 glass border-b border-slate-700/50">
+    <!-- Responsive Navbar -->
+    <nav class="sticky top-0 z-50 glass">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-lg">A</div>
-                    <span class="font-bold text-xl tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">AniGallery</span>
+            <div class="flex flex-col md:flex-row items-center justify-between py-3 md:h-16 gap-3 md:gap-0">
+                
+                <!-- Top Row: Logo & Stats (Mobile) -->
+                <div class="flex items-center justify-between w-full md:w-auto">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">A</div>
+                        <span class="font-bold text-xl tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">AniGallery</span>
+                    </div>
+                    <!-- Mobile Stats (Clean & Premium) -->
+                    <div class="flex md:hidden items-center gap-3 text-[11px] font-medium bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50 backdrop-blur-md shadow-sm">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-primary font-bold drop-shadow-sm">${imageData.length}</span>
+                            <span class="text-slate-400">Imgs</span>
+                        </div>
+                        <div class="h-3 w-px bg-slate-700/80"></div>
+                        <div class="flex items-center gap-1.5">
+                             <span class="text-emerald-400 font-bold drop-shadow-sm">${musicData.length}</span>
+                             <span class="text-slate-400">Tracks</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex gap-1 bg-slate-800/50 p-1 rounded-full text-sm font-medium">
-                    <button onclick="setTab('gallery')" id="tab-gallery" class="px-4 py-1.5 rounded-full transition-all text-white bg-slate-700 shadow shadow-primary/20">Gallery</button>
-                    <button onclick="setTab('music')" id="tab-music" class="px-4 py-1.5 rounded-full transition-all hover:text-white text-slate-400">Music</button>
-                    <button onclick="setTab('docs')" id="tab-docs" class="px-4 py-1.5 rounded-full transition-all hover:text-white text-slate-400">API Docs</button>
+
+                <!-- Tabs -->
+                <div class="flex w-full md:w-auto overflow-x-auto hide-scrollbar gap-1 bg-slate-800/50 p-1 rounded-xl md:rounded-full text-sm font-medium">
+                    <button onclick="setTab('gallery')" id="tab-gallery" class="flex-1 md:flex-none px-4 py-1.5 rounded-lg md:rounded-full transition-all text-white bg-slate-700 shadow shadow-primary/20 text-center whitespace-nowrap">Gallery</button>
+                    <button onclick="setTab('music')" id="tab-music" class="flex-1 md:flex-none px-4 py-1.5 rounded-lg md:rounded-full transition-all hover:text-white text-slate-400 text-center">Music</button>
+                    <button onclick="setTab('docs')" id="tab-docs" class="flex-1 md:flex-none px-4 py-1.5 rounded-lg md:rounded-full transition-all hover:text-white text-slate-400 text-center">API Docs</button>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="hidden md:flex text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+
+                <!-- Desktop Stats -->
+                <div class="hidden md:flex items-center gap-2">
+                    <div class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
                         <span class="text-primary font-bold mr-1">${imageData.length}</span> Imgs
                         <span class="mx-2 text-slate-600">|</span>
                         <span class="text-emerald-400 font-bold mr-1">${musicData.length}</span> Tracks
@@ -135,31 +155,31 @@ const htmlContent = `
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <main class="flex-grow max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 w-full">
         
         <!-- Gallery View -->
-        <div id="view-gallery" class="space-y-6 animate-fade-in">
-            <!-- Controls -->
-            <div class="flex flex-wrap justify-between items-center gap-4 bg-card/50 p-4 rounded-xl border border-slate-700/50">
-                <div class="flex items-center gap-4">
-                     <div class="relative">
+        <div id="view-gallery" class="space-y-4 md:space-y-6 animate-fade-in">
+            <!-- Mobile-First Controls -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-card/50 p-3 md:p-4 rounded-xl border border-slate-700/50">
+                <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                     <div class="relative w-full md:w-64">
                         <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="searchInput" placeholder="Search filename..." class="bg-dark border border-slate-700 text-sm rounded-lg focus:border-primary focus:ring-1 focus:ring-primary block pl-9 p-2 w-64 text-slate-200 outline-none transition-all">
+                        <input type="text" id="searchInput" placeholder="Search filename..." class="w-full bg-dark border border-slate-700 text-sm rounded-lg focus:border-primary focus:ring-1 focus:ring-primary pl-9 p-2.5 text-slate-200 outline-none transition-all placeholder:text-slate-500">
                     </div>
-                    <select id="sortSelect" onchange="renderGallery()" class="bg-dark border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 outline-none">
+                    <select id="sortSelect" onchange="renderGallery()" class="w-full md:w-48 bg-dark border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary p-2.5 outline-none">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="sizeDesc">Size (High to Low)</option>
                         <option value="name">Name (A-Z)</option>
                     </select>
                 </div>
-                <div class="text-sm text-slate-400">
-                    Total Size: <span class="text-slate-200 font-mono">${(imageData.reduce((a,b)=>a+b.size,0)/1024/1024).toFixed(2)} MB</span>
+                <div class="text-xs md:text-sm text-slate-400 font-mono w-full md:w-auto text-right">
+                    Total: <span class="text-slate-200">${(imageData.reduce((a,b)=>a+b.size,0)/1024/1024).toFixed(2)} MB</span>
                 </div>
             </div>
 
-            <!-- Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="gallery-grid">
+            <!-- Grid (2 cols mobile, 3+ desktop) -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4" id="gallery-grid">
                 <!-- JS Injected -->
             </div>
              <div id="no-results" class="hidden text-center py-20 text-slate-500">
@@ -169,23 +189,25 @@ const htmlContent = `
         </div>
 
         <!-- Music View -->
-        <div id="view-music" class="hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id="view-music" class="hidden space-y-4 md:space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 ${musicData.map((track, i) => `
-                <div class="bg-card hover:bg-slate-700/50 transition border border-slate-700/50 p-4 rounded-xl flex items-center gap-4 group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/20 transition">
-                        <i class="fa-solid fa-music text-white text-lg"></i>
+                <div class="bg-card hover:bg-slate-700/50 active:scale-[0.98] transition border border-slate-700/50 p-3 md:p-4 rounded-xl flex items-center gap-3 md:gap-4 group">
+                    <div class="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/20 transition">
+                        <i class="fa-solid fa-music text-white text-sm md:text-lg"></i>
                     </div>
                     <div class="flex-grow min-w-0">
-                        <h3 class="font-medium text-slate-200 truncate cursor-help" title="${track.name}">${track.name}</h3>
-                        <p class="text-xs text-slate-400">${(track.size/1024/1024).toFixed(2)} MB • MP3</p>
+                        <h3 class="font-medium text-slate-200 truncate cursor-help text-sm md:text-base" title="${track.name}">${track.name}</h3>
+                        <p class="text-[10px] md:text-xs text-slate-400">${(track.size/1024/1024).toFixed(2)} MB • MP3</p>
                     </div>
-                    <a href="${track.path}" download class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition">
-                        <i class="fa-solid fa-download text-xs"></i>
-                    </a>
-                    <button onclick="playMusic('${track.path}', this)" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-white hover:text-dark transition">
-                        <i class="fa-solid fa-play text-xs pl-0.5"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <a href="${track.path}" download class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition">
+                            <i class="fa-solid fa-download text-xs"></i>
+                        </a>
+                        <button onclick="playMusic('${track.path}', this)" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-white hover:text-dark transition">
+                            <i class="fa-solid fa-play text-xs pl-0.5"></i>
+                        </button>
+                    </div>
                 </div>
                 `).join('')}
             </div>
@@ -193,28 +215,28 @@ const htmlContent = `
         </div>
 
         <!-- API Docs View -->
-        <div id="view-docs" class="hidden max-w-4xl mx-auto space-y-8">
+        <div id="view-docs" class="hidden max-w-4xl mx-auto space-y-6 md:space-y-8">
             <!-- Settings Toggle -->
-            <div class="bg-card border border-slate-700 rounded-xl p-6 relative overflow-hidden">
+            <div class="bg-card border border-slate-700 rounded-xl p-4 md:p-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i class="fa-solid fa-database text-9xl"></i>
+                    <i class="fa-solid fa-database text-6xl md:text-9xl"></i>
                 </div>
-                <h2 class="text-2xl font-bold mb-4">API Configuration</h2>
-                <div class="flex items-center gap-4 mb-6">
-                    <span class="text-sm text-slate-400">Current Environment:</span>
-                    <div class="flex bg-dark p-1 rounded-lg border border-slate-700">
-                        <button onclick="setEnv('hosted')" id="env-hosted" class="px-4 py-1 text-xs font-medium rounded-md bg-primary text-white transition">Hosted (Public)</button>
-                        <button onclick="setEnv('local')" id="env-local" class="px-4 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-white transition">Localhost</button>
+                <h2 class="text-xl md:text-2xl font-bold mb-4">API Configuration</h2>
+                <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-6">
+                    <span class="text-sm text-slate-400">Environment:</span>
+                    <div class="flex bg-dark p-1 rounded-lg border border-slate-700 w-fit">
+                        <button onclick="setEnv('hosted')" id="env-hosted" class="px-3 md:px-4 py-1.5 text-xs font-medium rounded-md bg-primary text-white transition">Hosted Public</button>
+                        <button onclick="setEnv('local')" id="env-local" class="px-3 md:px-4 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-white transition">Localhost</button>
                     </div>
                 </div>
-                <div class="bg-dark rounded-lg p-4 font-mono text-sm text-slate-300 border border-slate-700 flex justify-between items-center group">
-                    <span id="api-url-display">${HOSTED_URL}/api.json</span>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('api-url-display').innerText)" class="opacity-0 group-hover:opacity-100 transition text-xs bg-slate-700 px-2 py-1 rounded hover:bg-slate-600">Copy</button>
+                <div class="bg-dark rounded-lg p-3 md:p-4 font-mono text-xs md:text-sm text-slate-300 border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 group">
+                    <span id="api-url-display" class="break-all">${HOSTED_URL}/api.json</span>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('api-url-display').innerText)" class="flex-shrink-0 text-xs bg-slate-700 px-3 py-1.5 rounded active:bg-primary transition w-full md:w-auto text-center">Copy URL</button>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <h3 class="text-xl font-semibold border-b border-slate-700 pb-2">Endpoints</h3>
+            <div class="space-y-4 md:space-y-6">
+                <h3 class="text-lg md:text-xl font-semibold border-b border-slate-700 pb-2">Endpoints</h3>
                 
                 <div class="space-y-4">
                     <div class="bg-card border border-slate-700 rounded-lg p-4">
@@ -224,7 +246,7 @@ const htmlContent = `
                         </div>
                         <p class="text-sm text-slate-400 mb-3">Returns comprehensive data for all images and music tracks.</p>
                         <div class="bg-dark rounded p-3 overflow-x-auto">
-<pre class="text-xs text-blue-300 font-mono">
+<pre class="text-[10px] md:text-xs text-blue-300 font-mono">
 {
   "generated_at": "2024-...",
   "base_url": "...",
@@ -248,9 +270,9 @@ const htmlContent = `
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-800 bg-dark/50 py-8 mt-auto">
+    <footer class="border-t border-slate-800 bg-dark/50 py-6 mt-auto">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-slate-500 text-sm">Waifu Gallery v1.0 • Built with Node.js & Tailwind</p>
+            <p class="text-slate-500 text-xs md:text-sm">Waifu Gallery v1.1 • Mobile Optimized</p>
         </div>
     </footer>
 
@@ -284,10 +306,10 @@ const htmlContent = `
             
             // Update Buttons
             document.querySelectorAll('[id^="tab-"]').forEach(btn => {
-                btn.className = 'px-4 py-1.5 rounded-full transition-all hover:text-white text-slate-400';
+                btn.className = 'flex-1 md:flex-none px-4 py-1.5 rounded-lg md:rounded-full transition-all hover:text-white text-slate-400 text-center';
             });
             const activeBtn = document.getElementById('tab-' + tab);
-            activeBtn.className = 'px-4 py-1.5 rounded-full transition-all text-white bg-slate-700 shadow shadow-primary/20';
+            activeBtn.className = 'flex-1 md:flex-none px-4 py-1.5 rounded-lg md:rounded-full transition-all text-white bg-slate-700 shadow shadow-primary/20 text-center whitespace-nowrap';
         }
 
         // Env Toggle
@@ -300,13 +322,13 @@ const htmlContent = `
             const urlDisplay = document.getElementById('api-url-display');
 
             if (env === 'hosted') {
-                hostBtn.className = 'px-4 py-1 text-xs font-medium rounded-md bg-primary text-white transition shadow shadow-primary/20';
-                localBtn.className = 'px-4 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-white transition';
+                hostBtn.className = 'px-3 md:px-4 py-1.5 text-xs font-medium rounded-md bg-primary text-white transition shadow shadow-primary/20';
+                localBtn.className = 'px-3 md:px-4 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-white transition';
                 urlDisplay.innerText = HOSTED_BASE + '/api.json';
             } else {
-                localBtn.className = 'px-4 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white transition shadow shadow-emerald-500/20';
-                hostBtn.className = 'px-4 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-white transition';
-                urlDisplay.innerText = 'http://localhost:3000/api.json (You need to run a local server)';
+                localBtn.className = 'px-3 md:px-4 py-1.5 text-xs font-medium rounded-md bg-emerald-500 text-white transition shadow shadow-emerald-500/20';
+                hostBtn.className = 'px-3 md:px-4 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-white transition';
+                urlDisplay.innerText = 'http://localhost:3000/api.json (run local server)';
             }
         }
 
@@ -339,11 +361,11 @@ const htmlContent = `
             noRes.classList.add('hidden');
 
             const html = filtered.map((img, i) => \`
-                <div class="group relative aspect-[2/3] bg-card rounded-lg overflow-hidden border border-slate-700/50 cursor-zoom-in transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10" onclick="window.open('\${img.path}', '_blank')">
+                <div class="group relative aspect-[2/3] bg-card rounded-lg overflow-hidden border border-slate-700/50 cursor-pointer transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10" onclick="window.open('\${img.path}', '_blank')">
                     <img src="\${img.path}" loading="lazy" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" alt="\${img.name}">
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                        <p class="text-xs font-mono text-white truncate">\${img.name}</p>
-                        <p class="text-[10px] text-slate-400">\${(img.size/1024).toFixed(0)} KB</p>
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 md:p-3">
+                        <p class="text-[10px] md:text-xs font-mono text-white truncate">\${img.name}</p>
+                        <p class="text-[9px] md:text-[10px] text-slate-400">\${(img.size/1024).toFixed(0)} KB</p>
                     </div>
                 </div>
             \`).join('');
@@ -351,27 +373,19 @@ const htmlContent = `
             grid.innerHTML = html;
         }
 
-        // Music Player
+        // Music
         function playMusic(path, btn) {
             const audio = document.getElementById('global-audio');
-            
-            // Reset icons
             document.querySelectorAll('.fa-pause').forEach(i => i.classList.replace('fa-pause', 'fa-play'));
-            
             if (audio.getAttribute('src') === path && !audio.paused) {
                 audio.pause();
                 return;
             }
-
             audio.src = path;
             audio.play();
-            
             const icon = btn.querySelector('i');
             icon.classList.replace('fa-play', 'fa-pause');
-            
-            audio.onended = () => {
-                icon.classList.replace('fa-pause', 'fa-play');
-            };
+            audio.onended = () => { icon.classList.replace('fa-pause', 'fa-play'); };
         }
     </script>
 </body>

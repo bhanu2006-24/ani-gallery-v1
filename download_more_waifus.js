@@ -4,7 +4,7 @@ const path = require('path');
 const sharp = require('sharp');
 
 const IMGS_DIR = path.join(__dirname, 'imgs');
-const MAX_IMAGES = 50;
+const MAX_IMAGES = 200;
 const MIN_DELAY = 2000;
 const MAX_DELAY = 5000;
 
